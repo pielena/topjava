@@ -23,7 +23,7 @@
             <th>Calories</th>
         </tr>
         </thead>
-        <c:forEach var="mealTo" items="${meals}">
+        <c:forEach var="mealTo" items="${requestScope.meals}">
             <jsp:useBean id="mealTo" type="ru.javawebinar.topjava.model.MealTo"/>
             <tr class="${mealTo.excess ? 'exceeded' : 'normal'}">
                 <td>
