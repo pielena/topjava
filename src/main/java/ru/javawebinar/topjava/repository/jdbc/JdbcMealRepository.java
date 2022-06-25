@@ -39,16 +39,19 @@ public class JdbcMealRepository implements MealRepository {
     public Meal save(Meal meal, int userId) {
         MapSqlParameterSource map = new MapSqlParameterSource()
                 .addValue("id", meal.getId())
-                .addValue("user_id", userId)
-                .addValue("date_time", meal.getDateTime())
+                .addValue("dateTime", meal.getDateTime())
                 .addValue("description", meal.getDescription())
-                .addValue("calories", meal.getCalories());
+                .addValue("calories", meal.getCalories())
+                .addValue("userId", userId);
+
         if (meal.isNew()) {
             Number newKey = insertMeal.executeAndReturnKey(map);
             meal.setId(newKey.intValue());
         } else if (namedParameterJdbcTemplate.update(
-                "UPDATE meals SET date_time = :dateTime, description = :description, calories = :calories " +
-                        "WHERE id = :id AND user_id = :userId", map) == 0) {
+                "update meals set date_time = :dateTime, " +
+                        "description = :description, " +
+                        "calories = :calories " +
+                        "where id = :id and user_id = :userId", map) == 0) {
             return null;
         }
         return meal;
@@ -72,15 +75,8 @@ public class JdbcMealRepository implements MealRepository {
 
     @Override
     public List<Meal> getBetweenHalfOpen(LocalDateTime startDateTime, LocalDateTime endDateTime, int userId) {
-        MapSqlParameterSource map = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("startDate", startDateTime)
-                .addValue("endDate", endDateTime);
-
-        return namedParameterJdbcTemplate.query("SELECT * FROM meals WHERE date_time BETWEEN :startDateTime AND :endDateTime " +
-                        "AND user_id = :userId " +
-                        "ORDER BY date_time desc",
-                map,
-                ROW_MAPPER);
+        return jdbcTemplate.query(
+                "SELECT * FROM meals WHERE user_id=?  AND date_time >=  ? AND date_time < ? ORDER BY date_time DESC",
+                ROW_MAPPER, userId, startDateTime, endDateTime);
     }
 }
