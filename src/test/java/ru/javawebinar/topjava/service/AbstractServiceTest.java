@@ -2,9 +2,12 @@ package ru.javawebinar.topjava.service;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.Stopwatch;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
@@ -14,6 +17,7 @@ import ru.javawebinar.topjava.ActiveDbProfileResolver;
 import ru.javawebinar.topjava.TimingRules;
 
 import static org.junit.Assert.assertThrows;
+import static ru.javawebinar.topjava.Profiles.JDBC;
 import static ru.javawebinar.topjava.util.ValidationUtil.getRootCause;
 
 @ContextConfiguration({
@@ -31,6 +35,12 @@ public abstract class AbstractServiceTest {
     @Rule
     public Stopwatch stopwatch = TimingRules.STOPWATCH;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Autowired
+    private Environment environment;
+
     //  Check root cause in JUnit: https://github.com/junit-team/junit4/pull/778
     protected <T extends Throwable> void validateRootCause(Class<T> rootExceptionClass, Runnable runnable) {
         assertThrows(rootExceptionClass, () -> {
@@ -40,5 +50,14 @@ public abstract class AbstractServiceTest {
                 throw getRootCause(e);
             }
         });
+    }
+
+    public boolean isJdbcCurrentProfile() {
+        for (String s : environment.getActiveProfiles()) {
+            if (JDBC.equalsIgnoreCase(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
